@@ -1,0 +1,4 @@
+/venv
+/pickles
+*.pkl
+*.xlsx
