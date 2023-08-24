@@ -2,3 +2,7 @@
 /pickles
 *.pkl
 *.xlsx
+
+/model
+/results
+/tokenizer

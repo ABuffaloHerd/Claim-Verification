@@ -41,23 +41,22 @@ for frame in frames:
 # Convert the label to a binary value
 label_map = {'T': 1, 'F': 0, 'N': 2}
 for i in range(len(label)):
-    label[i] = label_map[label[i]]
+    label[i] = str(label_map[label[i]])
 
 # Tokenize the dataset
 tokenizer = BertTokenizer.from_pretrained('bert-base-uncased')
 
 # Tokenize the claim and evidence
 print("Tokenizing the dataset...")
-print("DEBUG: Claim: " + claim[0])
-print("DEBUG: Evidence: " + evidence[0])
-
-print("DEBUG: " + str(len(claim)) + " claims and " + str(len(evidence)) + " evidence")
 
 # For some reason, one of these isn't a string. Convert them all to strings.
 claim = [str(c) for c in claim]
 evidence = [str(e) for e in evidence]
 
-encodings = tokenizer(claim, evidence, truncation=True, padding=True, max_length=512, return_tensors='pt')
+# Combine the claim and evidence into one string, tokenize it with its label
+combined = [" [SEP] ".join([c, e]) for c, e in zip(claim, evidence)]
+
+encodings = tokenizer(combined, label, truncation=True, padding=True, max_length=512, return_tensors='pt')
 
 # Save the tokenized dataset to a pickle file
 with open('data.pkl', 'wb') as f:
