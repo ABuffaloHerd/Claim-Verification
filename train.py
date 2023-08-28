@@ -10,10 +10,12 @@ import torch
 import transformers
 import os
 import pandas as pd
+import json
 
 from sklearn.model_selection import train_test_split
 from transformers import BertTokenizer, BertModel, BertForSequenceClassification, Trainer, TrainingArguments
 from torch.utils.data import Dataset, DataLoader
+from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_score
 
 # Define the dataset class???
 class FactCheckingDataset(Dataset):
@@ -90,11 +92,42 @@ args = TrainingArguments(
     save_total_limit=3
 )
 
+# Define the compute metrics function
+def compute_metrics(p):
+    """
+    p is a dictionary returned by the Trainer containing:
+    'predictions': Predicted labels
+    'label_ids': True labels
+    """
+    preds = p.predictions.argmax(-1)  # Get the index of the predicted label
+    labels = p.label_ids
+
+    # Calculate metrics
+    precision = precision_score(labels, preds, average='micro')
+    recall = recall_score(labels, preds, average='micro')
+    f1 = f1_score(labels, preds, average='micro')
+
+    # Print metrics to a file
+    with open("metrics.json", "w") as f:
+        json.dump({
+            'precision': precision,
+            'recall': recall,
+            'f1_score': f1
+        }, f)
+
+    # You can also return the metrics to be logged by the Trainer
+    return {
+        'precision': precision,
+        'recall': recall,
+        'f1': f1,
+    }
+
 trainer = Trainer(
     model=model,
     args=args,
     train_dataset=dataset,
-    eval_dataset=eval_set
+    eval_dataset=eval_set,
+    compute_metrics=compute_metrics
 )
 
 # GPU is automatically detected and used if available
