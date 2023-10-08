@@ -3,6 +3,7 @@ Aidan Chan 20114106
 COMP702 RND - Claim Verification
 
 This script trains the model and saves it.
+Uses bert-base-uncased as the model.
 """
 
 import pickle
@@ -115,7 +116,7 @@ def compute_metrics(p):
             'f1_score': f1
         }, f)
 
-    # You can also return the metrics to be logged by the Trainer
+    # return the metrics to be logged by the Trainer
     return {
         'precision': precision,
         'recall': recall,

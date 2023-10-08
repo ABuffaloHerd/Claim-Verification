@@ -6,3 +6,7 @@
 /model
 /results
 /tokenizer
+
+/model_v1
+
+*.csv
