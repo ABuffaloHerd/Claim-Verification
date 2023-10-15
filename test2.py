@@ -25,9 +25,9 @@ tokenizer = BartTokenizer.from_pretrained('facebook/bart-base')
 model.eval()
 
 # Define inputs
-claim = "Ford is a good company"
-evidence = "Ford uses child labour"
-label = 0  # for BART, this might represent a sequence, like "F [SEP] Because of evidence mismatch."
+claim = "FDA staff flags uncertainties on Veru's COVID drug"
+evidence = "Veru's shares were up at $15.7 in afternoon trading. They fell nearly 9%% since mid-September, when the FDA rescheduled the advisory committee meeting."
+label = 1
 
 # Encode the inputs
 text = claim + " [SEP] " + evidence
@@ -42,5 +42,5 @@ decoded_output = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 # Print the results
 print("Claim: " + claim)
 print("Evidence: " + evidence)
-print("Label: " + str(label))
+print("Sanity check label: " + {1: 'T', 0: 'F', 2: 'N'}[label])  # Convert label number back to T/F/N
 print("Predicted: " + decoded_output)
