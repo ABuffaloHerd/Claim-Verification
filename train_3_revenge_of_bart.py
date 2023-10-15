@@ -22,7 +22,11 @@ from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_sc
 
 MODE = "eval"  # train or eval
 
-device = torch.device("cuda:0")
+if MODE == "train":
+    device = torch.device("cuda:0")
+else: # eval
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512" # Looks like not even this is enough
+    device = torch.device("cpu")
 
 
 # Initialize the model and tokenizer
@@ -81,11 +85,11 @@ print(df.head(10))
 # Set up training args
 training_args = TrainingArguments(
     per_device_train_batch_size=8,
-    per_device_eval_batch_size=8, # 8 is too much for my measly 12GB VRAM apparently. Offloading it to the CPU should help
+    per_device_eval_batch_size=1, # 8 is too much for my measly 12GB VRAM apparently. Offloading it to the CPU should help
     logging_dir='./logs',
     logging_steps=100,
     save_steps=100,
-    eval_steps=100,
+    eval_steps=10,
     save_total_limit=3,
     output_dir='./results',
 )
@@ -142,7 +146,9 @@ if MODE == "train":
 else:
     # Evaluate the model
     # Load the model from disk
-    model = BartForConditionalGeneration.from_pretrained("./model").to('cpu') # As a last resort, use CPU
+    print("Evaluation mode")
+    device_cpu = torch.device("cpu")
+    model = BartForConditionalGeneration.from_pretrained("./model").to(device_cpu) # As a last resort, use CPU
 
 # Clear cuda cache
 torch.cuda.empty_cache()
