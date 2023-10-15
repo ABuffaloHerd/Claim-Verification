@@ -20,6 +20,8 @@ from transformers import BartTokenizer, BartForConditionalGeneration, Trainer, T
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_score, classification_report
 
+MODE = "eval"  # train or eval
+
 device = torch.device("cuda:0")
 
 
@@ -79,7 +81,7 @@ print(df.head(10))
 # Set up training args
 training_args = TrainingArguments(
     per_device_train_batch_size=8,
-    per_device_eval_batch_size=8,
+    per_device_eval_batch_size=8, # 8 is too much for my measly 12GB VRAM apparently. Offloading it to the CPU should help
     logging_dir='./logs',
     logging_steps=100,
     save_steps=100,
@@ -126,11 +128,24 @@ trainer = Trainer(
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
-    # compute_metrics=compute_metrics
+    compute_metrics=compute_metrics
 )
 
-# Train the model
-trainer.train()
+if MODE == "train":
+    # Train the model
+    trainer.train()
+
+    # Save the model first (just in case)
+    model.save_pretrained("./model")
+
+
+else:
+    # Evaluate the model
+    # Load the model from disk
+    model = BartForConditionalGeneration.from_pretrained("./model").to('cpu') # As a last resort, use CPU
+
+# Clear cuda cache
+torch.cuda.empty_cache()
 
 # Evaluate the model
 eval = trainer.evaluate()
@@ -138,7 +153,3 @@ eval = trainer.evaluate()
 # Results
 with open("results.txt", "w") as f:
     f.write(str(eval))
-
-
-# Save the model
-model.save_pretrained("./model")
