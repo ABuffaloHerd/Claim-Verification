@@ -65,7 +65,7 @@ label_map = {'T': 1, 'F': 0, 'N': 2}
 label = [label_map[l] for l in df['Label (TFN)'].tolist()]
 reasons = df['Reason'].tolist()
 
-# Force the fucker into strings not float
+# Force the thing into strings not float
 claim = [str(x) for x in claim]
 evidence = [str(x) for x in evidence]
 reasons = [str(x) for x in reasons]
