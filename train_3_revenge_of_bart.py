@@ -13,6 +13,8 @@ import os
 import pandas as pd
 import json
 
+import numpy as np
+
 from sklearn.model_selection import train_test_split
 from transformers import BartTokenizer, BartForConditionalGeneration, Trainer, TrainingArguments
 from torch.utils.data import Dataset, DataLoader
@@ -97,16 +99,15 @@ eval_dataset = FactCheckingDataset(tokenizer, claim_eval, evidence_eval, label_e
 
 # Define metric function
 def compute_metrics(eval_pred):
-    # Get the predictions and true labels from the evaluation prediction object
-    logits = eval_pred.predictions
-    labels = eval_pred.label_ids
+    predictions, labels = eval_pred
+    predictions = np.argmax(predictions, axis=1)
+
+    # Print the classification report to the console
+    print(classification_report(labels, predictions, target_names=['F', 'T', 'N']))
     
-    # Convert logits to predicted labels
-    preds = logits.argmax(-1)
-    
-    # Calculate metrics using classification_report
-    report = classification_report(labels.flatten(), preds.flatten(), output_dict=True, labels=[0,1,2], target_names=['F', 'T', 'N'])
-    
+    # Compute metrics for logging and return
+    report = classification_report(labels, predictions, output_dict=True, labels=[0,1,2], target_names=['F', 'T', 'N'])
+
     # Extract the required metrics
     precision = report['micro avg']['precision']
     recall = report['micro avg']['recall']
@@ -117,6 +118,7 @@ def compute_metrics(eval_pred):
         'recall': recall,
         'f1': f1,
     }
+
 
 # SEND IT
 trainer = Trainer(
