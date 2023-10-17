@@ -18,7 +18,7 @@ import numpy as np
 from sklearn.model_selection import train_test_split
 from transformers import BartTokenizer, BartForConditionalGeneration, Trainer, TrainingArguments
 from torch.utils.data import Dataset, DataLoader
-from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_score, classification_report
+from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_score, classification_report, precision_recall_fscore_support
 
 MODE = "train"  # train or eval
 
@@ -101,7 +101,8 @@ claim_train, claim_eval, evidence_train, evidence_eval, label_train, label_eval,
 )
 
 # use only 100 examples for evaluation as part of even more desperate optimizations
-eval_sample_size = 100  
+# Since training takes even more memory let's cut that down to 25 in training mode
+eval_sample_size = 25 if MODE == "train" else 100
 
 # Create the datasets
 train_dataset = FactCheckingDataset(tokenizer, claim_train, evidence_train, label_train, reason_train)
@@ -112,8 +113,13 @@ eval_dataset = torch.utils.data.Subset(eval_dataset_full, indices=range(eval_sam
 
 # Define metric function
 def compute_metrics(eval_pred):
-    predictions, labels = eval_pred
-    predictions = np.argmax(predictions, axis=1)
+    logits, labels = eval_pred
+
+    predictions = logits[0]
+    # Sanity check: This tells us that the predictions are in the correct format
+    print(predictions.shape)
+
+    predictions = np.argmax(logits, axis=1)
 
     # Print the classification report to the console
     print(classification_report(labels, predictions, target_names=['F', 'T', 'N']))
@@ -135,18 +141,18 @@ def compute_metrics(eval_pred):
         'f1': f1,
     }
 
-
 # SEND IT
 trainer = Trainer(
     model=model,
     args=training_args,
     train_dataset=train_dataset,
     eval_dataset=eval_dataset,
-    compute_metrics=compute_metrics
+    # compute_metrics=compute_metrics # so, as i've learned, this is not the correct way to do it. This is meant to be used in classification tasks, not seq2seq
 )
 
 if MODE == "train":
     # Train the model
+    print("Training mode")
     trainer.train()
 
     # Save the model first (just in case)
@@ -154,7 +160,7 @@ if MODE == "train":
 
 
 else:
-    # Evaluate the model
+    # Evaluate the model straight away
     # Load the model from disk
     print("Evaluation mode")
 
