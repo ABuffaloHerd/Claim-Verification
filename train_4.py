@@ -8,10 +8,7 @@ Version 4 uses custom metrics to evaluate the model immediately after training.
 
 import pickle
 import torch
-import transformers
-import os
 import pandas as pd
-import json
 
 import numpy as np
 
