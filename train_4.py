@@ -19,9 +19,10 @@ from sklearn.model_selection import train_test_split
 from transformers import BartTokenizer, BartForConditionalGeneration, Trainer, TrainingArguments
 from torch.utils.data import Dataset
 
-# Load confusion matrix class from the testing evaluation script
-from evaluate_tfn import ConfusionMatrix
+# Load confusion matrix class
+from cm import ConfusionMatrix
 
+# Set device to GPU
 device = torch.device("cuda:0")
 
 # Initialize the model and tokenizer
