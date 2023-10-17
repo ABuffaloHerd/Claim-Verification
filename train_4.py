@@ -62,6 +62,10 @@ class FactCheckingDataset(Dataset):
 with open("claims_1000_v3.xlsx",'rb') as f:
     df = pd.read_excel(f)
 
+# When chinese locale touch american locale, bad juju happen
+# I am sick and tired of "UnicodeDecodeError" and i will shoot the next computer that throws it.
+df.replace({r'[^\x20-\x7E]': ''}, regex=True, inplace=True)
+
 # Compile the dataset into four arrays (claim, evidence, label, reasons)
 claim = df['Claim'].tolist()
 evidence = df['Evidence'].tolist()
@@ -75,9 +79,6 @@ claim = [str(x) for x in claim]
 evidence = [str(x) for x in evidence]
 reasons = [str(x) for x in reasons]
 
-# Test
-print(df.head(10))
-
 # Set up training args
 training_args = TrainingArguments(
     per_device_train_batch_size=8,
@@ -85,10 +86,10 @@ training_args = TrainingArguments(
     logging_dir='./logs',
     logging_steps=100,
     save_steps=100,
-    eval_steps=10,
+    eval_steps=100,
     save_total_limit=3,
-    evaluation_strategy="steps",
     output_dir='./results',
+    num_train_epochs=1,
 )
 
 # Split the data into training and evaluation sets (e.g., 80% train, 20% evaluation)
@@ -127,6 +128,17 @@ model.eval()
 # Use the eval versions of the datasets and encode the inputs
 trainlen = len(claim_eval)
 
+# Pickle the eval datasets in case of failure. Should there be an evaluation error, the unseen data can be evaluated later
+with open("eval_dataset.pkl", "wb") as f:
+    t = [
+        claim_eval,
+        evidence_eval,
+        label_eval,
+        reason_eval
+    ]
+
+    pickle.dump(t, f)
+
 for i in range(trainlen):
     # Encode the inputs
     text = claim_eval[i] + " [SEP] " + evidence_eval[i]
@@ -139,7 +151,7 @@ for i in range(trainlen):
     decoded_output = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
     # Take the first character, (T/F/N) and compare it to the ground truth, update the confusion matrix
-    cm.update(label_eval[i], decoded_output[0])
+    cm.update({1: 'T', 0: 'F', 2: 'N'}[label_eval[i]], decoded_output[0])
 
     # Sanity check output
     print(f"Pass {i} of {trainlen} complete.")
@@ -147,11 +159,11 @@ for i in range(trainlen):
     # Log event to file for later analysis
     with open("log.txt", "a") as f:
         f.write("-"*20)
-        f.write(f"Pass {i} of {trainlen}")
-        f.write("Claim " + claim_eval[i])
-        f.write("Evidence " + evidence_eval[i])
-        f.write("Ground truth " + {1: 'T', 0: 'F', 2: 'N'}[label_eval[i]])
-        f.write("Predicted " + decoded_output)
+        f.write(f"Pass {i} of {trainlen}\n")
+        f.write("Claim " + claim_eval[i] + '\n')
+        f.write("Evidence " + evidence_eval[i] + '\n')
+        f.write("Ground truth " + {1: 'T', 0: 'F', 2: 'N'}[label_eval[i]] + '\n')
+        f.write("Predicted " + decoded_output + '\n')
 
 # Print the confusion matrix
 cm.table()
