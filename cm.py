@@ -75,3 +75,25 @@ class ConfusionMatrix:
             for value in self.confusion_matrix[idx]:
                 print(f'{int(value)}'.center(8), end='')
             print()
+
+if __name__ == "__main__":
+    cm = ConfusionMatrix()
+
+    cm.confusion_matrix[0][0] = 65  
+    cm.confusion_matrix[0][1] = 47
+    cm.confusion_matrix[0][2] = 317
+
+    cm.confusion_matrix[1][0] = 46
+    cm.confusion_matrix[1][1] = 76
+    cm.confusion_matrix[1][2] = 308
+
+    cm.confusion_matrix[2][0] = 20
+    cm.confusion_matrix[2][1] = 59
+    cm.confusion_matrix[2][2] = 262
+
+    cm.table()
+
+    print(cm.summary())
+    print("Micro precision: " + str(cm.micro_precision()))
+    print("Micro recall: " + str(cm.micro_recall()))
+    print("Micro F1 score: " + str(cm.micro_f1_score()))

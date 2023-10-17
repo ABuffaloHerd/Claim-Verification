@@ -171,5 +171,12 @@ print(cm.summary())
 
 # Dump the confusion matrix to a file
 with open("confusion_matrix.txt", "w") as f:
-    f.write(cm.summary() + '\n')
+    f.write("precision, recall, f1\n")
+    f.write(cm.micro_precision())
+    f.write('\n')
+    f.write(cm.micro_recall())
+    f.write('\n')
+    f.write(cm.micro_f1_score())
+    f.write('\n')
+    f.write('\n')
     f.write(cm.table())
