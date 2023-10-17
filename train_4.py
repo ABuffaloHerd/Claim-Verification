@@ -86,7 +86,7 @@ training_args = TrainingArguments(
     eval_steps=100,
     save_total_limit=3,
     output_dir='./results',
-    num_train_epochs=1,
+    num_train_epochs=3,
 )
 
 # Split the data into training and evaluation sets (e.g., 80% train, 20% evaluation)
@@ -169,11 +169,11 @@ print(cm.summary())
 # Dump the confusion matrix to a file
 with open("confusion_matrix.txt", "w") as f:
     f.write("precision, recall, f1\n")
-    f.write(cm.micro_precision())
+    f.write(str(cm.micro_precision()))
     f.write('\n')
-    f.write(cm.micro_recall())
+    f.write(str(cm.micro_recall()))
     f.write('\n')
-    f.write(cm.micro_f1_score())
+    f.write(str(cm.micro_f1_score()))
     f.write('\n')
     f.write('\n')
     f.write(cm.table())
