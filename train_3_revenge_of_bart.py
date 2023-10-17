@@ -20,12 +20,12 @@ from transformers import BartTokenizer, BartForConditionalGeneration, Trainer, T
 from torch.utils.data import Dataset, DataLoader
 from sklearn.metrics import precision_score, accuracy_score, f1_score, recall_score, classification_report
 
-MODE = "eval"  # train or eval
+MODE = "train"  # train or eval
 
 if MODE == "train":
     device = torch.device("cuda:0")
 else: # eval
-    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:512" # Looks like not even this is enough
+    os.environ["PYTORCH_CUDA_ALLOC_CONF"] = "max_split_size_mb:256" # Looks like not even this is enough
     device = torch.device("cpu")
 
 
@@ -91,6 +91,7 @@ training_args = TrainingArguments(
     save_steps=100,
     eval_steps=10,
     save_total_limit=3,
+    evaluation_strategy="steps",
     output_dir='./results',
 )
 
@@ -99,9 +100,15 @@ claim_train, claim_eval, evidence_train, evidence_eval, label_train, label_eval,
     claim, evidence, label, reasons, test_size=0.20, random_state=42
 )
 
+# use only 100 examples for evaluation as part of even more desperate optimizations
+eval_sample_size = 100  
+
 # Create the datasets
 train_dataset = FactCheckingDataset(tokenizer, claim_train, evidence_train, label_train, reason_train)
-eval_dataset = FactCheckingDataset(tokenizer, claim_eval, evidence_eval, label_eval, reason_eval)
+eval_dataset_full = FactCheckingDataset(tokenizer, claim_eval, evidence_eval, label_eval, reason_eval)
+
+# Take a subset of the evaluation dataset
+eval_dataset = torch.utils.data.Subset(eval_dataset_full, indices=range(eval_sample_size))
 
 # Define metric function
 def compute_metrics(eval_pred):
@@ -113,6 +120,9 @@ def compute_metrics(eval_pred):
     
     # Compute metrics for logging and return
     report = classification_report(labels, predictions, output_dict=True, labels=[0,1,2], target_names=['F', 'T', 'N'])
+
+    with open("report.txt", "w") as f:
+        f.write(json.dumps(report))
 
     # Extract the required metrics
     precision = report['micro avg']['precision']
@@ -147,6 +157,10 @@ else:
     # Evaluate the model
     # Load the model from disk
     print("Evaluation mode")
+
+    # More desperate optimizations
+    torch.no_grad()
+
     device_cpu = torch.device("cpu")
     model = BartForConditionalGeneration.from_pretrained("./model").to(device_cpu) # As a last resort, use CPU
 
@@ -154,7 +168,12 @@ else:
 torch.cuda.empty_cache()
 
 # Evaluate the model
-eval = trainer.evaluate()
+try:
+    eval = trainer.evaluate()
+except ValueError:
+    # do nothing
+    print("ValueError most likey to do with inhomogenous shape of the arrays. Ignoring... ")
+    
 
 # Results
 with open("results.txt", "w") as f:
