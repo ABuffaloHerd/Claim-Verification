@@ -4,6 +4,8 @@ COMP702 RND - Claim Verification
 
 This script trains the BART and saves it.
 Version 4 uses custom metrics to evaluate the model immediately after training.
+
+This is similar to evaluate_tfn.py, and works with BART only.
 """
 
 import pickle
@@ -19,7 +21,7 @@ from torch.utils.data import Dataset
 # Load confusion matrix class
 from cm import ConfusionMatrix
 
-# Set device to GPU
+# Set device to GPU. Change this if your device is not CUDA capable
 device = torch.device("cuda:0")
 
 # Initialize the model and tokenizer

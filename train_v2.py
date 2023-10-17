@@ -2,7 +2,8 @@
 Aidan Chan 20114106
 COMP702 RND - Claim Verification
 
-This script trains the BART and saves it.
+This script trains BART and saves it.
+Depreciated in favour of train_v3.py
 """
 
 import pickle

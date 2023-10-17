@@ -8,6 +8,10 @@ import json
 """
 Tests the model on a given dataset
 
+Usage:
+Put your model under a folder named "model" and run the script. 
+Change inputs to test the model on different input data.
+
 Aidan Chan 20114106
 """
 
