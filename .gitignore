@@ -12,3 +12,8 @@
 *.csv
 
 *.zip
+
+!requirements.txt
+!log.txt
+
+*.txt

@@ -1,7 +1,0 @@
-precision, recall, f1
-
-Predicted -->   1       0       2
---------------------------------------
-  Actual 1 |  186      38     205
-  Actual 0 |   72     281      77
-  Actual 2 |   43      26     272
