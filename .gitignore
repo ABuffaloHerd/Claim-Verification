@@ -17,3 +17,8 @@
 !log.txt
 
 *.txt
+
+/__pycache__
+*.pyc
+
+*.json
