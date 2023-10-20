@@ -21,6 +21,8 @@ from torch.utils.data import Dataset
 # Load confusion matrix class
 from cm import ConfusionMatrix
 
+DATASET = "claims_1000_v3.xlsx"
+
 # Set device to GPU. Change this if your device is not CUDA capable
 device = torch.device("cuda:0")
 
@@ -58,7 +60,7 @@ class FactCheckingDataset(Dataset):
         }
 
 # Load the dataset
-with open("claims_1000_v3.xlsx",'rb') as f:
+with open(DATASET,'rb') as f:
     df = pd.read_excel(f)
 
 # When chinese locale touch american locale, bad juju happen
